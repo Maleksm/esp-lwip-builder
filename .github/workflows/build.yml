@@ -44,8 +44,8 @@ jobs:
 
       - name: Patch sketch.cpp for library build
         run: |
-          # Создаем минимальную заглушку с app_main, чтобы линковщик не ругался
-          cat > arduino-esp32/main/sketch.cpp << 'EOF'
+          # Создаем минимальную заглушку в папке main, которую использует build.sh
+          cat > main/sketch.cpp << 'EOF'
           extern "C" void app_main(void) {
               // Empty stub for successful linking
           }
