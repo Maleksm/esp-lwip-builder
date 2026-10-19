@@ -29,6 +29,11 @@ jobs:
             git clone --branch 3.3.7 --depth 1 https://github.com/espressif/arduino-esp32.git components/arduino
           fi
 
+      - name: Fix script checkout logic for tags
+        run: |
+          # Автоматически заменяем проблемный git checkout -b на обычный git checkout во всех .sh скриптах
+          find . -name "*.sh" -type f -exec sed -i 's/git checkout -b/git checkout/g' {} +
+
       - name: Build libraries
         env:
           GIT_TERMINAL_PROMPT: 0
