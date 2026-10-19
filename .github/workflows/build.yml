@@ -29,6 +29,7 @@ jobs:
           GIT_TERMINAL_PROMPT: 0
           AR_USER: "espressif"
           AR_SOURCE_BRANCH: "3.3.7"
+          TARGETS: "esp32 esp32s3"
         run: |
           chmod +x build.sh tools/*.sh
           bash build.sh
