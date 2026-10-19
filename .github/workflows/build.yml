@@ -21,24 +21,11 @@ jobs:
         run: |
           git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
-      # --- ПРИНУДИТЕЛЬНО ЗАГРУЖАЕМ СТРОГИЙ ТЕГ 3.3.7 ---
-      - name: Prepare exact Arduino 3.3.7
-        run: |
-          mkdir -p components
-          if [ ! -d "components/arduino" ]; then
-            git clone --branch 3.3.7 --depth 1 https://github.com/espressif/arduino-esp32.git components/arduino
-          fi
-
-      - name: Fix script checkout logic for tags
-        run: |
-          # Автоматически заменяем проблемный git checkout -b на обычный git checkout во всех .sh скриптах
-          find . -name "*.sh" -type f -exec sed -i 's/git checkout -b/git checkout/g' {} +
-
       - name: Build libraries
         env:
           GIT_TERMINAL_PROMPT: 0
           AR_USER: "espressif"
-          AR_SOURCE_BRANCH: "3.3.7"
+          AR_SOURCE_BRANCH: "release/v3.3.x"
           TARGETS: "esp32 esp32s3"
         run: |
           chmod +x build.sh tools/*.sh
@@ -47,7 +34,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: compiled-lwip-libs-3.3.7
+          name: compiled-lwip-libs-3.3
           path: |
             out/
             lib/
