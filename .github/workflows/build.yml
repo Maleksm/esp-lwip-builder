@@ -25,10 +25,14 @@ jobs:
         env:
           GIT_TERMINAL_PROMPT: 0
           AR_USER: "espressif"
-          AR_SOURCE_BRANCH: "v3.3.7"
+          AR_SOURCE_BRANCH: "3.3.7"
           TARGETS: "esp32 esp32s3"
         run: |
           chmod +x build.sh tools/*.sh
+          
+          find . -name "*.sh" -type f -exec sed -i 's/git checkout -b "$AR_SOURCE_BRANCH" origin\/"$AR_SOURCE_BRANCH"/git checkout "$AR_SOURCE_BRANCH"/g' {} +
+          find . -name "*.sh" -type f -exec sed -i 's/git checkout -b/git checkout/g' {} +
+          
           bash build.sh
 
       - name: Upload artifacts
