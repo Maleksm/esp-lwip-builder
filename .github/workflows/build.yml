@@ -1,0 +1,43 @@
+name: Build LWIP Libraries
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Configure Git Credentials
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Build libraries
+        env:
+          GIT_TERMINAL_PROMPT: 0
+          AR_USER: "espressif"
+          AR_SOURCE_BRANCH: "3.3.7"
+        run: |
+          chmod +x build.sh tools/*.sh
+          bash build.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-lwip-libs-3.3.7
+          path: |
+            out/
+            lib/
+            ld/
