@@ -37,6 +37,11 @@ jobs:
           # Исправляем баг с дефисом/подчеркиванием
           sed -i 's/idf-libs/idf_libs/g' build.sh
 
+      - name: Debug - list files
+        run: |
+          ls -la
+          ls -la arduino-esp32 || echo "arduino-esp32 not found"
+
       - name: Patch sketch.cpp for library build
         run: |
           # Создаем минимальную заглушку с app_main, чтобы линковщик не ругался
