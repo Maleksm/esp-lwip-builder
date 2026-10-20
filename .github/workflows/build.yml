@@ -19,11 +19,11 @@ jobs:
         run: |
           # Клонируем Arduino 3.3.12 (тег)
           rm -rf arduino-esp32
-          git clone --branch 3.3.7 --depth 1 https://github.com/espressif/arduino-esp32.git
+          git clone --branch 3.3.8 --depth 1 https://github.com/espressif/arduino-esp32.git
 
           # Клонируем ESP-IDF v5.5.5 (тег)
           rm -rf esp-idf
-          git clone --branch v5.5.2 --depth 1 https://github.com/espressif/esp-idf.git
+          git clone --branch v5.5.4 --depth 1 https://github.com/espressif/esp-idf.git
 
       - name: Install ESP-IDF tools
         run: |
@@ -62,5 +62,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: compiled-lwip-libs-3.3.7
+          name: compiled-lwip-libs-3.3.8
           path: out/tools/esp32-arduino-libs/
