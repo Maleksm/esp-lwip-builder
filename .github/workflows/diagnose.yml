@@ -65,23 +65,34 @@ jobs:
 
       - name: Inspect main source files
         run: |
-          echo "=== Files in main ==="
-          find main -maxdepth 1 -type f -printf '%f\n' | sort
+          echo "=== Main directory ==="
+          ls -la main
 
-          for f in \
-            main/CMakeLists.txt \
-            main/idf_component.yml \
-            main/sketch.cpp \
-            main/arduino-lib-builder-cpp.cpp \
-            main/arduino-lib-builder-gcc.c
-          do
-            echo "=== $f ==="
-            if [ -f "$f" ]; then
-              sed -n '1,120p' "$f"
+          echo "=== main/CMakeLists.txt ==="
+          cat main/CMakeLists.txt
+
+          echo "=== main/sketch.cpp ==="
+          cat main/sketch.cpp
+
+          echo "=== Component path settings ==="
+          grep -nE 'AR_ROOT|AR_COMPS|AR_MANAGED_COMPS|IDF_PATH' tools/config.sh
+
+          echo "=== Arduino installation logic ==="
+          sed -n '1,100p' tools/install-arduino.sh
+
+          echo "=== Component update logic ==="
+          sed -n '1,100p' tools/update-components.sh
+
+          echo "=== Component-related CMake configuration ==="
+          grep -RInE 'EXTRA_COMPONENT_DIRS|COMPONENT_DIRS|COMPONENTS|arduino' \
+            CMakeLists.txt main components configs || true
+
+          echo "=== Arduino component candidates ==="
+          for dir in components/arduino arduino-esp32/components/arduino; do
+            if [ -d "$dir" ]; then
+              echo "FOUND: $dir"
+              ls -la "$dir" | head -30
             else
-              echo "File not found"
+              echo "NOT FOUND: $dir"
             fi
           done
-
-          echo "=== Arduino header references ==="
-          grep -RInE '#include [<"]Arduino\.h[>"]' main || true
