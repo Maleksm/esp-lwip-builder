@@ -90,6 +90,21 @@ jobs:
           git show 6671d0bd65cdb9d4cc1001b759e8610de945a8d5:.github/workflows/cron_build.yml |
             grep -nE -C 3 'build.sh|IDF_BRANCH|IDF_COMMIT|IDF_TAG|release/v5.5|arduino_branch|libs'
 
+          echo
+          echo "========== CRON WORKFLOW: IDF SELECTION =========="
+          git show 6671d0bd65cdb9d4cc1001b759e8610de945a8d5:.github/workflows/cron.yml |
+            grep -nE -C 4 'cron_build|idf_branch|idf_tag|idf_commit|release/v5.5'
+
+          echo
+          echo "========== REUSABLE WORKFLOW INPUT DEFAULTS =========="
+          git show 6671d0bd65cdb9d4cc1001b759e8610de945a8d5:.github/workflows/cron_build.yml |
+            sed -n '1,45p'
+
+          echo
+          echo "========== LIBRARY BUILD STEPS =========="
+          git show 6671d0bd65cdb9d4cc1001b759e8610de945a8d5:.github/workflows/cron_build.yml |
+            sed -n '82,110p'
+
       - name: Checkout Arduino Core 3.3.12
         shell: bash
         run: |
