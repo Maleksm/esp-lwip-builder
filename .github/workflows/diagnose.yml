@@ -62,6 +62,20 @@ jobs:
           echo "========== LWIP CONFIG CHANGES IN FORK =========="
           git diff upstream/master...HEAD -- configs/defconfig.common tools/config.sh
 
+          echo
+          echo "========== CANDIDATE COMMIT DETAILS =========="
+          git show --stat --oneline 6671d0bd65cdb9d4cc1001b759e8610de945a8d5
+
+          echo
+          echo "========== BUILDER VERSION SETTINGS =========="
+          git show 6671d0bd65cdb9d4cc1001b759e8610de945a8d5:tools/config.sh |
+            grep -nE 'IDF_BRANCH|IDF_TAG|IDF_COMMIT|AR_PR_TARGET_BRANCH'
+
+          echo
+          echo "========== BUILDER BUILD ENTRY POINT =========="
+          git show 6671d0bd65cdb9d4cc1001b759e8610de945a8d5:build.sh |
+            sed -n '1,100p'
+
       - name: Checkout Arduino Core 3.3.12
         shell: bash
         run: |
