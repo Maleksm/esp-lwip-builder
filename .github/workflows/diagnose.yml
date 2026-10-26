@@ -75,6 +75,24 @@ jobs:
           git show -s --format='%H%n%ci%n%s' \
             idf-release_v5.5
 
+          echo
+          echo "========== FORK BASE COMMIT =========="
+          BASE=$(git merge-base HEAD upstream/master)
+          git show -s --format='%H%n%ci%n%s' "$BASE"
+
+          echo
+          echo "========== RELEASE BRANCHES =========="
+          git branch -r --list 'upstream/release/*'
+
+          echo
+          echo "========== BASE CONTAINED IN BRANCHES =========="
+          git branch -r --contains "$BASE"
+
+          echo
+          echo "========== BUILDER CONFIG HISTORY =========="
+          git log -8 --format='%H %ci %s' \
+            upstream/master -- configs/defconfig.common tools/config.sh
+
       - name: Checkout Arduino Core 3.3.12
         shell: bash
         run: |
