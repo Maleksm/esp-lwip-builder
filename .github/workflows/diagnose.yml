@@ -52,6 +52,30 @@ jobs:
           echo "Changed tracked files:"
           git diff --name-status upstream/master...HEAD || true
 
+
+          echo
+          echo "========== ESPRESSIF RELEASE V5.5 =========="
+          git log -1 upstream/release/v5.5 \
+            --format='%H%n%ci%n%s'
+
+          echo
+          echo "Differences from release/v5.5:"
+          git diff --stat upstream/release/v5.5...HEAD || true
+
+          echo
+          echo "Changed files:"
+          git diff --name-status upstream/release/v5.5...HEAD || true
+
+          echo
+          echo "========== IMPORTANT CONFIG DIFF =========="
+          git diff upstream/release/v5.5...HEAD -- \
+            configs/defconfig.common tools/config.sh || true
+
+          echo
+          echo "========== ESPRESSIF RELEASE TAG =========="
+          git show -s --format='%H%n%ci%n%s' \
+            idf-release_v5.5 || true
+
       - name: Checkout Arduino Core 3.3.12
         shell: bash
         run: |
