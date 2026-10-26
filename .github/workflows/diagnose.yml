@@ -85,6 +85,11 @@ jobs:
           git log upstream/master --all --format='%H %cI %s' \
             --grep='3.3.12' -i -10
 
+          echo
+          echo "========== CRON BUILD WORKFLOW AT CANDIDATE =========="
+          git show 6671d0bd65cdb9d4cc1001b759e8610de945a8d5:.github/workflows/cron_build.yml |
+            grep -nE -C 3 'build.sh|IDF_BRANCH|IDF_COMMIT|IDF_TAG|release/v5.5|arduino_branch|libs'
+
       - name: Checkout Arduino Core 3.3.12
         shell: bash
         run: |
