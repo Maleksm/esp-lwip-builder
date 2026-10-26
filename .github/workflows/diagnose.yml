@@ -1,1 +1,64 @@
+name: Diagnose LWIP Build Environment
 
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout lib-builder
+        uses: actions/checkout@v4
+
+      - name: Clone Arduino-ESP32 and ESP-IDF
+        run: |
+          git clone --branch 3.3.12 --depth 1 \
+            https://github.com/espressif/arduino-esp32.git
+          git clone --branch v5.5.5 --depth 1 \
+            https://github.com/espressif/esp-idf.git
+
+      - name: Record versions
+        run: |
+          echo "=== Builder ==="
+          git rev-parse HEAD
+          git status --short
+
+          echo "=== Arduino-ESP32 ==="
+          git -C arduino-esp32 describe --tags --always
+          git -C arduino-esp32 rev-parse HEAD
+
+          echo "=== ESP-IDF ==="
+          git -C esp-idf describe --tags --always
+          git -C esp-idf rev-parse HEAD
+
+      - name: Inspect component directories
+        run: |
+          echo "=== Repository root ==="
+          pwd
+          ls -la
+
+          echo "=== Components ==="
+          ls -la components || true
+          ls -la managed_components || true
+          ls -la arduino-esp32/components || true
+
+          echo "=== Main component ==="
+          ls -la main
+          cat main/CMakeLists.txt
+          cat main/idf_component.yml || true
+
+          echo "=== Builder configuration ==="
+          sed -n '1,240p' tools/config.sh
+          sed -n '1,180p' tools/install-arduino.sh
+
+      - name: Inspect build configuration
+        run: |
+          echo "=== Top-level CMakeLists ==="
+          cat CMakeLists.txt
+
+          echo "=== Build scripts references ==="
+          grep -RInE \
+            'EXTRA_COMPONENT_DIRS|AR_COMPS|IDF_COMPONENT|arduino-esp32|managed_components|idf_component_register' \
+            CMakeLists.txt main tools build.sh configs \
+            --exclude-dir=.git || true
