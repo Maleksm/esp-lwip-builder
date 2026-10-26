@@ -32,11 +32,6 @@ jobs:
           . ./export.sh
           cd ..
 
-      - name: Patch build.sh for idf-libs argument
-        run: |
-          # Исправляем баг с дефисом/подчеркиванием
-          sed -i 's/idf-libs/idf_libs/g' build.sh
-
       - name: Debug - list files
         run: |
           ls -la
@@ -57,7 +52,7 @@ jobs:
           . ./esp-idf/export.sh
           
           # Запускаем сборку с флагом -s (пропустить обновление)
-          ./build.sh -s -t "esp32,esp32s3" -b idf_libs
+          ./build.sh -s -t "esp32,esp32s3" -b idf-libs
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
