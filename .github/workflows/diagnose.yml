@@ -1,4 +1,4 @@
-name: Diagnose LWIP Build Environment
+name: Diagnose Exact Build Versions
 
 'on':
   workflow_dispatch:
@@ -8,102 +8,106 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout lib-builder
+      - name: Checkout current lib-builder
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Clone Arduino-ESP32 and ESP-IDF
+      - name: Compare builder with Espressif upstream
+        shell: bash
         run: |
-          git clone --branch 3.3.12 --depth 1 \
-            https://github.com/espressif/arduino-esp32.git
-          git clone --branch v5.5.5 --depth 1 \
-            https://github.com/espressif/esp-idf.git
+          set -u
 
-      - name: Record versions
-        run: |
-          echo "=== Builder ==="
-          git rev-parse HEAD
+          echo "========== CURRENT BUILDER =========="
+          echo "Remote:"
+          git remote -v
+          echo
+          echo "Commit:"
+          git log -1 --format='%H%n%ci%n%s'
+          echo
+          echo "Description:"
+          git describe --tags --always --dirty
+          echo
+          echo "Working tree:"
           git status --short
 
-          echo "=== Arduino-ESP32 ==="
-          git -C arduino-esp32 describe --tags --always
+          echo
+          echo "========== ESPRESSIF UPSTREAM =========="
+          git remote add upstream \
+            https://github.com/espressif/esp32-arduino-lib-builder.git
+          git fetch upstream --tags
+
+          echo "Upstream master:"
+          git log -1 upstream/master --format='%H%n%ci%n%s'
+
+          echo
+          echo "Common ancestor:"
+          git merge-base HEAD upstream/master || true
+
+          echo
+          echo "Differences from upstream master:"
+          git diff --stat upstream/master...HEAD || true
+
+          echo
+          echo "Changed tracked files:"
+          git diff --name-status upstream/master...HEAD || true
+
+      - name: Checkout Arduino Core 3.3.12
+        shell: bash
+        run: |
+          set -eu
+
+          git clone \
+            https://github.com/espressif/arduino-esp32.git \
+            arduino-esp32
+
+          git -C arduino-esp32 checkout --detach 3.3.12
+
+          echo "========== ARDUINO-ESP32 =========="
+          git -C arduino-esp32 log -1 --format='%H%n%ci%n%s'
+          echo "Tag:"
+          git -C arduino-esp32 describe --tags --exact-match HEAD
+          echo "Commit:"
           git -C arduino-esp32 rev-parse HEAD
 
-          echo "=== ESP-IDF ==="
-          git -C esp-idf describe --tags --always
+      - name: Checkout ESP-IDF 5.5.5
+        shell: bash
+        run: |
+          set -eu
+
+          git clone \
+            https://github.com/espressif/esp-idf.git \
+            esp-idf
+
+          git -C esp-idf fetch --force --tags
+          git -C esp-idf checkout --detach 'v5.5.5^{commit}'
+
+          echo "========== ESP-IDF =========="
+          echo "Tag reference:"
+          git -C esp-idf show-ref --tags v5.5.5 || true
+          echo "Resolved tag commit:"
+          git -C esp-idf rev-parse 'v5.5.5^{commit}'
+          echo "Checked-out commit:"
           git -C esp-idf rev-parse HEAD
+          echo "Description:"
+          git -C esp-idf describe --tags --always
+          echo "Commit details:"
+          git -C esp-idf log -1 --format='%H%n%ci%n%s'
 
-      - name: Inspect component directories
+      - name: Record builder configuration
+        shell: bash
         run: |
-          echo "=== Repository root ==="
-          pwd
-          ls -la
+          echo "========== BUILDER CONFIGURATION =========="
 
-          echo "=== Components ==="
-          ls -la components || true
-          ls -la managed_components || true
-          ls -la arduino-esp32/components || true
+          echo "--- tools/config.sh ---"
+          sed -n '1,100p' tools/config.sh
 
-          echo "=== Main component ==="
-          ls -la main
-          cat main/CMakeLists.txt
-          cat main/idf_component.yml || true
+          echo
+          echo "--- configs/builds.json ---"
+          cat configs/builds.json
 
-          echo "=== Builder configuration ==="
-          sed -n '1,240p' tools/config.sh
-          sed -n '1,180p' tools/install-arduino.sh
-
-      - name: Inspect build configuration
-        run: |
-          echo "=== Top-level CMakeLists ==="
-          cat CMakeLists.txt
-
-          echo "=== Build scripts references ==="
-          grep -RInE \
-            'EXTRA_COMPONENT_DIRS|AR_COMPS|IDF_COMPONENT|arduino-esp32|managed_components|idf_component_register' \
-            CMakeLists.txt main tools build.sh configs \
-            --exclude-dir=.git || true
-
-      - name: Inspect main source files
-        run: |
-          echo "=== Main directory ==="
-          ls -la main
-
-          echo "=== main/CMakeLists.txt ==="
-          cat main/CMakeLists.txt
-
-          echo "=== main/sketch.cpp ==="
-          cat main/sketch.cpp
-
-          echo "=== Component path settings ==="
-          grep -nE 'AR_ROOT|AR_COMPS|AR_MANAGED_COMPS|IDF_PATH' tools/config.sh
-
-          echo "=== Arduino installation logic ==="
-          sed -n '1,100p' tools/install-arduino.sh
-
-          echo "=== Component update logic ==="
-          sed -n '1,100p' tools/update-components.sh
-
-          echo "=== Component-related CMake configuration ==="
-          grep -RInE 'EXTRA_COMPONENT_DIRS|COMPONENT_DIRS|COMPONENTS|arduino' \
-            CMakeLists.txt main components configs || true
-
-          echo "=== Arduino component candidates ==="
-          for dir in components/arduino arduino-esp32/components/arduino; do
-            if [ -d "$dir" ]; then
-              echo "FOUND: $dir"
-              ls -la "$dir" | head -30
-            else
-              echo "NOT FOUND: $dir"
-            fi
-          done
-
-          echo "=== TinyUSB dependency ==="
-          grep -n -C 3 -E 'priv_requires|REQUIRES|arduino' \
-            components/arduino_tinyusb/CMakeLists.txt || true
-
-          echo "=== Build mode ==="
-          grep -n -C 3 -E 'install-arduino|update-components|idf-libs|if.*SKIP|SKIP' \
+          echo
+          echo "--- Build script options ---"
+          grep -nE \
+            'SKIP_ENV|BUILD_TYPE|install-arduino|install-esp-idf|update-components|idf-libs' \
             build.sh || true
-
-          echo "=== Component directories ==="
-          find components -maxdepth 2 -name CMakeLists.txt -print
