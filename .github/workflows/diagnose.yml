@@ -62,3 +62,26 @@ jobs:
             'EXTRA_COMPONENT_DIRS|AR_COMPS|IDF_COMPONENT|arduino-esp32|managed_components|idf_component_register' \
             CMakeLists.txt main tools build.sh configs \
             --exclude-dir=.git || true
+
+      - name: Inspect main source files
+        run: |
+          echo "=== Files in main ==="
+          find main -maxdepth 1 -type f -printf '%f\n' | sort
+
+          for f in \
+            main/CMakeLists.txt \
+            main/idf_component.yml \
+            main/sketch.cpp \
+            main/arduino-lib-builder-cpp.cpp \
+            main/arduino-lib-builder-gcc.c
+          do
+            echo "=== $f ==="
+            if [ -f "$f" ]; then
+              sed -n '1,120p' "$f"
+            else
+              echo "File not found"
+            fi
+          done
+
+          echo "=== Arduino header references ==="
+          grep -RInE '#include [<"]Arduino\.h[>"]' main || true
