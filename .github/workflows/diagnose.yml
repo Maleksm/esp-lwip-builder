@@ -18,91 +18,49 @@ jobs:
         run: |
           set -u
 
-          echo "========== CURRENT BUILDER =========="
-          echo "Remote:"
-          git remote -v
-          echo
-          echo "Commit:"
+          git remote add upstream https://github.com/espressif/esp32-arduino-lib-builder.git
+          git fetch upstream --tags
+
+          echo "========== CURRENT FORK =========="
           git log -1 --format='%H%n%ci%n%s'
           echo
-          echo "Description:"
-          git describe --tags --always --dirty
-          echo
-          echo "Working tree:"
           git status --short
 
           echo
-          echo "========== ESPRESSIF UPSTREAM =========="
-          git remote add upstream \
-            https://github.com/espressif/esp32-arduino-lib-builder.git
-          git fetch upstream --tags
-
-          echo "Upstream master:"
+          echo "========== UPSTREAM MASTER =========="
           git log -1 upstream/master --format='%H%n%ci%n%s'
 
           echo
-          echo "Common ancestor:"
-          git merge-base HEAD upstream/master || true
-
-          echo
-          echo "Differences from upstream master:"
-          git diff --stat upstream/master...HEAD || true
-
-          echo
-          echo "Changed tracked files:"
-          git diff --name-status upstream/master...HEAD || true
-
-          echo
-          echo "========== ESPRESSIF RELEASE V5.5 =========="
-          git show -s --format='%H%n%ci%n%s' \
-            idf-release_v5.5
-
-          echo
-          echo "Differences from idf-release_v5.5:"
-          git diff --stat idf-release_v5.5...HEAD || true
-
-          echo
-          echo "Changed files:"
-          git diff --name-status idf-release_v5.5...HEAD || true
-
-          echo
-          echo "========== IMPORTANT CONFIG DIFF =========="
-          git diff idf-release_v5.5...HEAD -- \
-            configs/defconfig.common tools/config.sh || true
-
-          echo
-          echo "========== ESPRESSIF RELEASE TAG =========="
-          git show -s --format='%H%n%ci%n%s' \
-            idf-release_v5.5
-
-          echo
-          echo "========== FORK BASE COMMIT =========="
+          echo "========== FORK BASE =========="
           BASE=$(git merge-base HEAD upstream/master)
           git show -s --format='%H%n%ci%n%s' "$BASE"
 
           echo
-          echo "========== RELEASE BRANCHES =========="
-          git branch -r --list 'upstream/release/*'
+          echo "========== FORK DIFFERENCES =========="
+          git diff --stat upstream/master...HEAD
+          git diff --name-status upstream/master...HEAD
 
           echo
-          echo "========== BASE CONTAINED IN BRANCHES =========="
-          git branch -r --contains "$BASE"
+          echo "========== RELEASE TAG idf-release_v5.5 =========="
+          git show -s --format='%H%n%ci%n%s' idf-release_v5.5
 
           echo
-          echo "========== BUILDER CONFIG HISTORY =========="
-          git log -8 --format='%H %ci %s' \
-            upstream/master -- configs/defconfig.common tools/config.sh
+          echo "========== RECENT BUILDER COMMITS BEFORE CORE RELEASE =========="
+          git log upstream/master \
+            --before="2026-09-19 00:00:00 +0000" \
+            --after="2026-09-15 00:00:00 +0000" \
+            --format='%H | %cI | %s' -10
 
           echo
-          echo "========== FORK-ONLY CONFIG CHANGES =========="
-          git diff upstream/master...HEAD -- \
-            configs/defconfig.common tools/config.sh
+          echo "========== LAST MASTER COMMIT BEFORE LIBRARY RELEASE =========="
+          git rev-list -1 --before="2026-09-18 09:17:43 +0000" upstream/master |
+          while read -r commit; do
+            git show -s --format='%H%n%ci%n%s' "$commit"
+          done
 
           echo
-          echo "========== CONFIG FILES AT FORK BASE =========="
-          git show upstream/master:configs/defconfig.common
-          echo
-          git show upstream/master:tools/config.sh
+          echo "========== LWIP CONFIG CHANGES IN FORK =========="
+          git diff upstream/master...HEAD -- configs/defconfig.common tools/config.sh
 
       - name: Checkout Arduino Core 3.3.12
         shell: bash
