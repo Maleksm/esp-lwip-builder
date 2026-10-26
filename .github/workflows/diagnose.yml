@@ -1,6 +1,6 @@
 name: Diagnose LWIP Build Environment
 
-on:
+'on':
   workflow_dispatch:
 
 jobs:
