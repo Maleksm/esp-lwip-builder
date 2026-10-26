@@ -76,6 +76,15 @@ jobs:
           git show 6671d0bd65cdb9d4cc1001b759e8610de945a8d5:build.sh |
             sed -n '1,100p'
 
+          echo
+          echo "========== RELEASE WORKFLOW FILES AT CANDIDATE =========="
+          git ls-tree -r --name-only 6671d0bd65cdb9d4cc1001b759e8610de945a8d5 .github/workflows
+
+          echo
+          echo "========== BUILDER RELEASE REFERENCES =========="
+          git log upstream/master --all --format='%H %cI %s' \
+            --grep='3.3.12' -i -10
+
       - name: Checkout Arduino Core 3.3.12
         shell: bash
         run: |
