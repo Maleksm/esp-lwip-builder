@@ -46,6 +46,26 @@ jobs:
           }
           EOF
 
+      - name: Record build environment
+        run: |
+          echo "=== Builder ==="
+          git rev-parse HEAD
+          git status --short
+
+          echo "=== Arduino-ESP32 ==="
+          git -C arduino-esp32 describe --tags --always
+          git -C arduino-esp32 rev-parse HEAD
+
+          echo "=== ESP-IDF ==="
+          git -C esp-idf describe --tags --always
+          git -C esp-idf rev-parse HEAD
+
+          echo "=== Build configuration ==="
+          sha256sum configs/defconfig.common
+          sha256sum configs/defconfig.esp32
+          sha256sum configs/defconfig.esp32s3
+          sha256sum configs/builds.json
+
       - name: Build libraries
         run: |
           # Активируем IDF (важно!)
