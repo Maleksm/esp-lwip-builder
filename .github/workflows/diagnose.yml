@@ -93,6 +93,17 @@ jobs:
           git log -8 --format='%H %ci %s' \
             upstream/master -- configs/defconfig.common tools/config.sh
 
+          echo
+          echo "========== FORK-ONLY CONFIG CHANGES =========="
+          git diff upstream/master...HEAD -- \
+            configs/defconfig.common tools/config.sh
+
+          echo
+          echo "========== CONFIG FILES AT FORK BASE =========="
+          git show upstream/master:configs/defconfig.common
+          echo
+          git show upstream/master:tools/config.sh
+
       - name: Checkout Arduino Core 3.3.12
         shell: bash
         run: |
