@@ -96,3 +96,13 @@ jobs:
               echo "NOT FOUND: $dir"
             fi
           done
+          echo "=== TinyUSB Arduino dependency ==="
+          grep -n -C 5 -E 'priv_requires|REQUIRES|arduino' \
+            components/arduino_tinyusb/CMakeLists.txt || true
+
+          echo "=== Build mode and Arduino installation ==="
+          grep -n -C 4 -E 'skip|install-arduino|update-components|idf-libs' \
+            build.sh
+
+          echo "=== Library copy script ==="
+          sed -n '1,180p' tools/copy-libs.sh
